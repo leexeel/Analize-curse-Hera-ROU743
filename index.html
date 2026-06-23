@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hera ROU-743 — Istoric curse</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f172a;
+    color: #f1f5f9;
+    font-family: system-ui, sans-serif;
+    font-size: 13px;
+    padding: 24px;
+  }
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .sub { color: #64748b; font-size: 12px; margin-bottom: 26px; }
+
+  .race-list { display: flex; flex-direction: column; gap: 10px; max-width: 720px; }
+
+  a.race-card {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    background: #1e293b; border-radius: 8px; padding: 16px 18px;
+    text-decoration: none; color: inherit;
+    border: 1px solid transparent;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  a.race-card:hover { border-color: #38bdf8; background: #233044; }
+
+  .race-main { display: flex; flex-direction: column; gap: 3px; }
+  .race-name { font-size: 15px; font-weight: 600; color: #f1f5f9; }
+  .race-date { font-size: 11.5px; color: #64748b; }
+
+  .race-stats { display: flex; gap: 18px; flex-shrink: 0; }
+  .race-stat { text-align: right; min-width: 64px; }
+  .race-stat .label { font-size: 9.5px; text-transform: uppercase; letter-spacing: .04em; color: #64748b; margin-bottom: 2px; }
+  .race-stat .value { font-size: 14px; font-weight: 600; color: #38bdf8; }
+
+  .empty-note { color: #64748b; font-size: 12px; margin-top: 18px; max-width: 520px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<h1>Hera ROU-743 — Istoric curse</h1>
+<div class="sub">Analize de curse generate din exporturi Vakaros Atlas 2. Click pe o cursa pentru raportul detaliat.</div>
+
+<div class="race-list" id="raceList"></div>
+<div class="empty-note" id="emptyNote" style="display:none">Nu exista inca nicio cursa publicata aici.</div>
+
+<script>
+// ───────── Lista curselor ─────────
+// Pentru a adauga o cursa noua: adauga un obiect aici si publica fisierul HTML
+// corespunzator (generat separat) in acelasi folder, apoi actualizeaza campul "file".
+const RACES = [
+  {
+    name: "Mangalia → Varna",
+    date: "12 iunie 2026",
+    distance_nm: 67.3,
+    duration: "17h 41m",
+    max_speed_kt: 9.1,
+    file: "race-analysis-hera-2026-06-12.html"
+  }
+];
+
+const list = document.getElementById('raceList');
+const emptyNote = document.getElementById('emptyNote');
+
+if (RACES.length === 0) {
+  emptyNote.style.display = 'block';
+} else {
+  // cele mai recente primele (presupunand ordine cronologica in array; sortam descrescator pe data dat ca string ISO daca exista)
+  RACES.forEach(r => {
+    const a = document.createElement('a');
+    a.className = 'race-card';
+    a.href = r.file;
+    a.innerHTML = `
+      <div class="race-main">
+        <div class="race-name">${r.name}</div>
+        <div class="race-date">${r.date}</div>
+      </div>
+      <div class="race-stats">
+        <div class="race-stat"><div class="label">Distanta</div><div class="value">${r.distance_nm} nm</div></div>
+        <div class="race-stat"><div class="label">Durata</div><div class="value">${r.duration}</div></div>
+        <div class="race-stat"><div class="label">V. max</div><div class="value">${r.max_speed_kt} kt</div></div>
+      </div>
+    `;
+    list.appendChild(a);
+  });
+}
+</script>
+
+</body>
+</html>
