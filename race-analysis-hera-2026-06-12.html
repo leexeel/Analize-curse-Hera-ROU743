@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-78J2X1W9GJ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-78J2X1W9GJ');
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Analiza cursa Hera — 12 iunie 2026</title>
@@ -499,6 +507,87 @@ drawZoomTrack();
 drawZoomSpeed();
 drawZoomHeel();
 buildVolteTable();
+
+// ── Crosshair sincronizat viteza + heel ──
+(function(){
+  const PADL=34,PADR=10;
+  const PADT_S=16,PADB_S=22;
+  const PADT_H=10,PADB_H=18;
+  const MAX_S=11, MAX_H=45;
+
+  const cS=document.getElementById('speedCanvas');
+  const cH=document.getElementById('heelCanvas');
+  let baseS=null, baseH=null;
+
+  function saveBase(){
+    baseS=cS.getContext('2d').getImageData(0,0,cS.width,cS.height);
+    baseH=cH.getContext('2d').getImageData(0,0,cH.width,cH.height);
+  }
+
+  function tooltip(ctx,label,x,y,canvasW,padT){
+    ctx.font='bold 11px system-ui';
+    const tw=ctx.measureText(label).width;
+    const tx=x+10+tw+8>canvasW-PADR ? x-tw-14 : x+10;
+    ctx.fillStyle='rgba(15,23,42,0.88)';
+    ctx.fillRect(tx-4,padT+2,tw+8,16);
+    ctx.fillStyle='#f1f5f9';
+    ctx.fillText(label,tx,padT+13);
+  }
+
+  function drawCrosshair(rawX){
+    if(!baseS) return;
+    const n=S.t.length;
+    const W=cS.width;
+    const idx=Math.max(0,Math.min(n-1,Math.round((rawX-PADL)/(W-PADL-PADR)*(n-1))));
+    const x=PADL+(idx/(n-1))*(W-PADL-PADR);
+
+    const ctxS=cS.getContext('2d'); ctxS.putImageData(baseS,0,0);
+    const ctxH=cH.getContext('2d'); ctxH.putImageData(baseH,0,0);
+
+    const sog=S.sog[idx], heel=S.heel[idx];
+    const t=new Date(S.t[idx]).toTimeString().slice(0,8);
+    const pyS=v=>cS.height-PADB_S-(v/MAX_S)*(cS.height-PADT_S-PADB_S);
+    const pyH=v=>PADT_H+(1-(v+MAX_H)/(2*MAX_H))*(cH.height-PADT_H-PADB_H);
+
+    [
+      {ctx:ctxS, H:cS.height, padT:PADT_S, padB:PADB_S, py:pyS, val:sog, unit:'kt'},
+      {ctx:ctxH, H:cH.height, padT:PADT_H, padB:PADB_H, py:pyH, val:heel, unit:'°'}
+    ].forEach(({ctx,H,padT,padB,py,val,unit})=>{
+      ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,H-padB);
+      ctx.strokeStyle='rgba(255,255,255,0.45)'; ctx.lineWidth=1;
+      ctx.setLineDash([4,4]); ctx.stroke(); ctx.setLineDash([]);
+      ctx.beginPath(); ctx.arc(x,py(val),4.5,0,2*Math.PI);
+      ctx.fillStyle='#fff'; ctx.strokeStyle='#0f172a'; ctx.lineWidth=1.5;
+      ctx.fill(); ctx.stroke();
+    });
+
+    tooltip(ctxS, `${t}  ${sog.toFixed(1)} kt`, x, pyS(sog), W, PADT_S);
+    tooltip(ctxH, `${t}  ${heel.toFixed(1)}°`,   x, pyH(heel), W, PADT_H);
+  }
+
+  function restore(){
+    if(baseS){ cS.getContext('2d').putImageData(baseS,0,0); }
+    if(baseH){ cH.getContext('2d').putImageData(baseH,0,0); }
+  }
+
+  function relX(canvas,e){
+    const r=canvas.getBoundingClientRect();
+    return (e.clientX-r.left)*(canvas.width/r.width);
+  }
+
+  [cS,cH].forEach(c=>{
+    c.style.cursor='crosshair';
+    c.addEventListener('mousemove',e=>{
+      if(!baseS) saveBase();
+      drawCrosshair(relX(c,e));
+    });
+    c.addEventListener('mouseleave',restore);
+  });
+
+  // save base after draw calls finish
+  setTimeout(saveBase,200);
+})();
+
 </script>
 </body>
 </html>
