@@ -47,6 +47,10 @@
 <div class="race-list" id="raceList"></div>
 <div class="empty-note" id="emptyNote" style="display:none">Nu exista inca nicio cursa publicata aici.</div>
 
+<h2 style="font-size:16px;font-weight:600;margin:32px 0 4px">Training RRS</h2>
+<div class="sub" style="margin-bottom:14px">Exercitii si materiale pentru regulile de cursa (Racing Rules of Sailing).</div>
+<div class="race-list" id="trainingList"></div>
+
 <script>
 // ───────── Lista curselor ─────────
 // Pentru a adauga o cursa noua: adauga un obiect aici si publica fisierul HTML
@@ -70,8 +74,36 @@ const RACES = [
   }
 ];
 
+// ───────── Training RRS ─────────
+// Adauga aici linkuri spre exercitii/quiz-uri; publica fisierele in acelasi folder.
+const TRAINING = [
+  {
+    name: "Steaguri marinaresti",
+    desc: "Alfabet ICS si fanioane numerice — invata, flashcards, quiz",
+    file: "steaguri-quiz.html#ics"
+  },
+  {
+    name: "Steaguri curse",
+    desc: "Semnalele de cursa (RRS) — invata, flashcards, quiz",
+    file: "steaguri-quiz.html#race"
+  }
+];
+
 const list = document.getElementById('raceList');
 const emptyNote = document.getElementById('emptyNote');
+
+const tlist = document.getElementById('trainingList');
+TRAINING.forEach(t => {
+  const a = document.createElement('a');
+  a.className = 'race-card';
+  a.href = t.file;
+  a.innerHTML = `
+    <div class="race-main">
+      <div class="race-name">${t.name}</div>
+      <div class="race-date">${t.desc}</div>
+    </div>`;
+  tlist.appendChild(a);
+});
 
 if (RACES.length === 0) {
   emptyNote.style.display = 'block';

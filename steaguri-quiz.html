@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Steaguri marinărești — Quiz & Flashcards</title>
+<style>
+  :root{
+    --bg:#0d1420; --panel:#16202f; --panel2:#1d2a3d; --border:#2a3b52;
+    --text:#e8eef6; --muted:#8fa3bb; --accent:#3da5ff; --ok:#2ecc71; --bad:#e74c3c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI',Roboto,sans-serif;min-height:100vh}
+  header{padding:20px 16px 8px;text-align:center}
+  header h1{font-size:1.4rem}
+  header p{color:var(--muted);font-size:.9rem;margin-top:4px}
+  nav{display:flex;gap:8px;justify-content:center;padding:14px;flex-wrap:wrap}
+  nav button, .catbtn{
+    background:var(--panel);border:1px solid var(--border);color:var(--text);
+    padding:8px 18px;border-radius:20px;cursor:pointer;font-size:.95rem
+  }
+  nav button.active, .catbtn.active{background:var(--accent);border-color:var(--accent);color:#04121f;font-weight:600}
+  .cats{display:flex;gap:8px;justify-content:center;padding:0 14px 14px;flex-wrap:wrap}
+  main{max-width:900px;margin:0 auto;padding:0 14px 60px}
+  .flag{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .flag svg{filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+  /* Learn grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;gap:12px;align-items:flex-start}
+  .card .flag{flex-shrink:0;width:96px}
+  .card h3{font-size:.95rem;margin-bottom:4px;color:var(--accent)}
+  .card p{font-size:.83rem;color:var(--text);line-height:1.35}
+  .card .snd{font-size:.75rem;color:var(--muted);margin-top:4px}
+  /* Flashcards */
+  .fcwrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding-top:10px}
+  .fc{background:var(--panel);border:1px solid var(--border);border-radius:16px;width:min(480px,100%);
+      min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      cursor:pointer;padding:24px;text-align:center;gap:12px}
+  .fc .hint{color:var(--muted);font-size:.8rem}
+  .fc h2{color:var(--accent);font-size:1.1rem}
+  .fc p{line-height:1.4}
+  .fcnav{display:flex;gap:10px}
+  .fcnav button{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:10px 20px;border-radius:10px;cursor:pointer}
+  .prog{color:var(--muted);font-size:.85rem}
+  /* Quiz */
+  .qwrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding-top:10px}
+  .qflag{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(480px,100%);display:flex;justify-content:center}
+  .opts{display:flex;flex-direction:column;gap:10px;width:min(560px,100%)}
+  .opts button{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:12px 16px;
+      border-radius:10px;cursor:pointer;text-align:left;font-size:.9rem;line-height:1.35}
+  .opts button:hover{border-color:var(--accent)}
+  .opts button.correct{background:#123524;border-color:var(--ok)}
+  .opts button.wrong{background:#3a1620;border-color:var(--bad)}
+  .opts button:disabled{cursor:default}
+  .score{font-size:1rem}
+  .big{font-size:2rem;font-weight:700}
+  .review{width:min(560px,100%);display:flex;flex-direction:column;gap:10px}
+  .review .card{align-items:center}
+  .startbtn{background:var(--accent);border:none;color:#04121f;font-weight:700;padding:12px 28px;border-radius:12px;cursor:pointer;font-size:1rem}
+  .subtle{color:var(--muted);font-size:.85rem;text-align:center}
+</style>
+</head>
+<body>
+<a href="index.html" style="display:inline-block;color:#3da5ff;font-size:12px;text-decoration:none;margin:14px 0 0 16px">&larr; Inapoi la pagina principala</a>
+<header>
+  <h1>⛵ Steaguri marinărești</h1>
+  <p>Semnale de cursă (RRS 2025–2028) & Codul Internațional de Semnale</p>
+</header>
+<nav>
+  <button data-tab="learn" class="active">📖 Învață</button>
+  <button data-tab="cards">🃏 Flashcards</button>
+  <button data-tab="quiz">✅ Quiz</button>
+</nav>
+<div class="cats">
+  <button class="catbtn active" data-cat="all">Toate</button>
+  <button class="catbtn" data-cat="race">Semnale de cursă</button>
+  <button class="catbtn" data-cat="ics">Alfabet ICS</button>
+  <button class="catbtn" data-cat="num">Fanioane numerice</button>
+</div>
+<main id="main"></main>
+
+<script>
+/* ================= FLAG DRAWINGS ================= */
+const C = {R:'#cf142b', B:'#00247d', Y:'#f5d117', W:'#ffffff', K:'#14181d', O:'#ff7f11'};
+let uid=0;
+function wrap(shape, content, w){
+  uid++;
+  let vb, poly;
+  if(shape==='sq'){ vb='0 0 120 96'; poly='0,0 120,0 120,96 0,96'; }
+  else if(shape==='sw'){ vb='0 0 120 96'; poly='0,0 120,0 96,48 120,96 0,96'; }
+  else if(shape==='pn'){ vb='0 0 180 70'; poly='0,0 180,22 180,48 0,70'; }
+  else { vb='0 0 170 70'; poly='0,0 170,35 0,70'; } /* triangle */
+  const width = w || (shape==='sq'||shape==='sw' ? 96 : 130);
+  return `<svg viewBox="${vb}" width="${width}" role="img">
+    <defs><clipPath id="c${uid}"><polygon points="${poly}"/></clipPath></defs>
+    <g clip-path="url(#c${uid})">${content}</g>
+    <polygon points="${poly}" fill="none" stroke="#0a0e14" stroke-width="1.5"/>
+  </svg>`;
+}
+const full=(c)=>`<rect x="0" y="0" width="200" height="100" fill="${c}"/>`;
+function hstripes(cols,h){let s='',y=0;const st=h/cols.length;for(const c of cols){s+=`<rect x="0" y="${y}" width="200" height="${st+0.5}" fill="${c}"/>`;y+=st;}return s;}
+function vstripes(cols,w){let s='',x=0;const st=w/cols.length;for(const c of cols){s+=`<rect x="${x}" y="0" width="${st+0.5}" height="100" fill="${c}"/>`;x+=st;}return s;}
+
+const D = {}; // svg content per flag id
+D.A = ()=>wrap('sw', vstripes([C.W,C.B],120));
+D.B = ()=>wrap('sw', full(C.R));
+D.C = ()=>wrap('sq', hstripes([C.B,C.W,C.R,C.W,C.B],96));
+D.D = ()=>wrap('sq', `${full(C.Y)}<rect x="0" y="24" width="200" height="48" fill="${C.B}"/>`);
+D.E = ()=>wrap('sq', hstripes([C.B,C.R],96));
+D.F = ()=>wrap('sq', `${full(C.W)}<polygon points="60,0 120,48 60,96 0,48" fill="${C.R}"/>`);
+D.G = ()=>wrap('sq', vstripes([C.Y,C.B,C.Y,C.B,C.Y,C.B],120));
+D.H = ()=>wrap('sq', vstripes([C.W,C.R],120));
+D.I = ()=>wrap('sq', `${full(C.Y)}<circle cx="60" cy="48" r="19" fill="${C.K}"/>`);
+D.J = ()=>wrap('sq', hstripes([C.B,C.W,C.B],96));
+D.K = ()=>wrap('sq', vstripes([C.Y,C.B],120));
+D.L = ()=>wrap('sq', `<rect x="0" y="0" width="60" height="48" fill="${C.Y}"/><rect x="60" y="0" width="60" height="48" fill="${C.K}"/><rect x="0" y="48" width="60" height="48" fill="${C.K}"/><rect x="60" y="48" width="60" height="48" fill="${C.Y}"/>`);
+D.M = ()=>wrap('sq', `${full(C.B)}<path d="M0,0 L120,96 M120,0 L0,96" stroke="${C.W}" stroke-width="17"/>`);
+D.N = ()=>{let s='';for(let r=0;r<4;r++)for(let c=0;c<4;c++)s+=`<rect x="${c*30}" y="${r*24}" width="30" height="24" fill="${(r+c)%2===0?C.B:C.W}"/>`;return wrap('sq',s);};
+D.O = ()=>wrap('sq', `<polygon points="0,0 120,0 120,96" fill="${C.R}"/><polygon points="0,0 120,96 0,96" fill="${C.Y}"/>`);
+D.P = ()=>wrap('sq', `${full(C.B)}<rect x="30" y="24" width="60" height="48" fill="${C.W}"/>`);
+D.Q = ()=>wrap('sq', full(C.Y));
+D.R = ()=>wrap('sq', `${full(C.R)}<rect x="49" y="0" width="22" height="96" fill="${C.Y}"/><rect x="0" y="38" width="120" height="20" fill="${C.Y}"/>`);
+D.S = ()=>wrap('sq', `${full(C.W)}<rect x="30" y="24" width="60" height="48" fill="${C.B}"/>`);
+D.T = ()=>wrap('sq', vstripes([C.R,C.W,C.B],120));
+D.U = ()=>wrap('sq', `<rect x="0" y="0" width="60" height="48" fill="${C.R}"/><rect x="60" y="0" width="60" height="48" fill="${C.W}"/><rect x="0" y="48" width="60" height="48" fill="${C.W}"/><rect x="60" y="48" width="60" height="48" fill="${C.R}"/>`);
+D.V = ()=>wrap('sq', `${full(C.W)}<path d="M0,0 L120,96 M120,0 L0,96" stroke="${C.R}" stroke-width="17"/>`);
+D.W = ()=>wrap('sq', `${full(C.B)}<rect x="20" y="16" width="80" height="64" fill="${C.W}"/><rect x="40" y="32" width="40" height="32" fill="${C.R}"/>`);
+D.X = ()=>wrap('sq', `${full(C.W)}<rect x="48" y="0" width="24" height="96" fill="${C.B}"/><rect x="0" y="37" width="120" height="22" fill="${C.B}"/>`);
+D.Y = ()=>{let s=full(C.Y)+`<g transform="rotate(-38.7 60 48)">`;for(let i=0;i<12;i++){if(i%2===1)s+=`<rect x="-80" y="${-90+i*30}" width="280" height="30" fill="${C.R}"/>`;}s+='</g>';return wrap('sq',s);};
+D.Z = ()=>wrap('sq', `<polygon points="0,0 120,0 60,48" fill="${C.Y}"/><polygon points="0,0 60,48 0,96" fill="${C.K}"/><polygon points="0,96 60,48 120,96" fill="${C.R}"/><polygon points="120,0 60,48 120,96" fill="${C.B}"/>`);
+/* numerals — pennants */
+D.N0 = ()=>wrap('pn', `${full(C.Y)}<rect x="60" y="0" width="60" height="100" fill="${C.R}"/>`);
+D.N1 = ()=>wrap('pn', `${full(C.W)}<circle cx="42" cy="35" r="19" fill="${C.R}"/>`);
+D.N2 = ()=>wrap('pn', `${full(C.B)}<circle cx="42" cy="35" r="19" fill="${C.W}"/>`);
+D.N3 = ()=>wrap('pn', vstripes([C.R,C.W,C.B],180));
+D.N4 = ()=>wrap('pn', `${full(C.R)}<rect x="48" y="0" width="24" height="100" fill="${C.W}"/><rect x="0" y="25" width="200" height="20" fill="${C.W}"/>`);
+D.N5 = ()=>wrap('pn', vstripes([C.Y,C.B],180));
+D.N6 = ()=>wrap('pn', hstripes([C.K,C.W],70));
+D.N7 = ()=>wrap('pn', hstripes([C.Y,C.R],70));
+D.N8 = ()=>wrap('pn', `${full(C.W)}<rect x="48" y="0" width="24" height="100" fill="${C.R}"/><rect x="0" y="25" width="200" height="20" fill="${C.R}"/>`);
+D.N9 = ()=>wrap('pn', `<rect x="0" y="0" width="90" height="35" fill="${C.W}"/><rect x="90" y="0" width="90" height="35" fill="${C.K}"/><rect x="0" y="35" width="90" height="35" fill="${C.R}"/><rect x="90" y="35" width="90" height="35" fill="${C.Y}"/>`);
+/* special */
+D.AP = ()=>wrap('pn', vstripes([C.R,C.W,C.R,C.W,C.R],180));
+D.SUB1 = ()=>wrap('tr', `${full(C.B)}<polygon points="0,11 141,35 0,59" fill="${C.Y}"/>`);
+D.BLACK = ()=>wrap('sq', full(C.K));
+D.BLUE = ()=>wrap('sq', full('#0055d4'));
+D.ORANGE = ()=>wrap('sq', full(C.O));
+function stack(top, bottom){
+  return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">${top}${bottom}</div>`;
+}
+
+/* ================= DATA ================= */
+const ICS_MEANINGS = {
+  A:['Alfa','„Am scafandru sub apă; țineți-vă la distanță și mergeți cu viteză redusă."'],
+  B:['Bravo','„Încarc, descarc sau transport mărfuri periculoase."'],
+  C:['Charlie','„Da" (afirmativ).'],
+  D:['Delta','„Țineți-vă la distanță de mine; manevrez cu dificultate."'],
+  E:['Echo','„Îmi schimb drumul spre tribord."'],
+  F:['Foxtrot','„Sunt în avarie; comunicați cu mine."'],
+  G:['Golf','„Am nevoie de pilot." (nave de pescuit: „Îmi ridic plasele.")'],
+  H:['Hotel','„Am pilot la bord."'],
+  I:['India','„Îmi schimb drumul spre babord."'],
+  J:['Juliett','„Am incendiu la bord și mărfuri periculoase: țineți-vă bine la distanță."'],
+  K:['Kilo','„Doresc să comunic cu dumneavoastră."'],
+  L:['Lima','„Opriți nava imediat."'],
+  M:['Mike','„Nava mea este oprită și nu are viteză prin apă."'],
+  N:['November','„Nu" (negativ).'],
+  O:['Oscar','„Om la apă!"'],
+  P:['Papa','„Blue Peter" — în port: toată lumea la bord, nava urmează să plece.'],
+  Q:['Quebec','„Nava mea este sănătoasă; cer libera practică." (carantină)'],
+  R:['Romeo','Fără semnificație ca steag individual în ICS.'],
+  S:['Sierra','„Mașinile mele merg înapoi."'],
+  T:['Tango','„Țineți-vă la distanță; pescuiesc în perechi (traul dublu)."'],
+  U:['Uniform','„Vă îndreptați spre un pericol!"'],
+  V:['Victor','„Am nevoie de asistență."'],
+  W:['Whiskey','„Am nevoie de asistență medicală."'],
+  X:['X-ray','„Opriți-vă intențiile și urmăriți semnalele mele."'],
+  Y:['Yankee','„Ancora mea derapează."'],
+  Z:['Zulu','„Am nevoie de remorcher." (nave de pescuit: „Îmi lansez plasele.")']
+};
+const items = [];
+for(const L in ICS_MEANINGS){
+  items.push({cat:'ics', label:`${L} — ${ICS_MEANINGS[L][0]}`, svg:D[L](), meaning:ICS_MEANINGS[L][1]});
+}
+for(let n=0;n<=9;n++){
+  items.push({cat:'num', label:`Fanionul numeric ${n}`, svg:D['N'+n](), meaning:`Cifra ${n} în Codul Internațional de Semnale.`});
+}
+/* Race signals — RRS 2025–2028 */
+const race = [
+  {label:'AP (Fanionul de răspuns)', svg:D.AP(), meaning:'Cursele care nu au început sunt amânate.', snd:'Ridicat: 2 sunete · Coborât: 1 sunet (semnalul de atenție la 1 min după coborâre)'},
+  {label:'AP peste H', svg:stack(D.AP(),D.H()), meaning:'Cursele sunt amânate. Alte semnale vor fi date la țărm.'},
+  {label:'AP peste A', svg:stack(D.AP(),D.A()), meaning:'Cursele sunt amânate. Nicio altă cursă astăzi.'},
+  {label:'AP peste fanion numeric (1–6)', svg:stack(D.AP(),D.N2()), meaning:'Amânare cu numărul respectiv de ore (ex.: AP peste 2 = amânare 2 ore).'},
+  {label:'P', svg:D.P(), meaning:'Semnal pregătitor — 4 minute până la start.', snd:'Ridicat: 1 sunet · Coborât la 1 min: 1 sunet lung'},
+  {label:'I', svg:D.I(), meaning:'Regula 30.1 în vigoare: dacă ești pe partea cursei a liniei în ultimul minut, trebuie să ocolești un capăt al liniei înainte de start („round-the-ends").'},
+  {label:'Z', svg:D.Z(), meaning:'Regula 30.2 în vigoare: penalizare de 20% la punctaj dacă ești în triunghiul liniei în ultimul minut înainte de start.'},
+  {label:'U', svg:D.U(), meaning:'Regula 30.3 în vigoare: descalificare dacă ești în triunghiul liniei în ultimul minut — dar NU se aplică dacă startul este reluat sau cursa reînceputa.'},
+  {label:'Steagul negru', svg:D.BLACK(), meaning:'Regula 30.4 în vigoare: descalificare dacă ești în triunghiul liniei în ultimul minut — se aplică ȘI dacă startul este reluat (BFD).'},
+  {label:'X', svg:D.X(), meaning:'Rechemare individuală: una sau mai multe bărci au fost peste linie la start (OCS) și trebuie să revină.', snd:'1 sunet'},
+  {label:'First Substitute (Primul substitut)', svg:D.SUB1(), meaning:'Rechemare generală: startul este anulat pentru toată flota. Un nou start va urma.', snd:'2 sunete · Coborât: 1 sunet (atenția la 1 min)'},
+  {label:'S', svg:D.S(), meaning:'Traseu scurtat: terminați cursa conform regulii 32.2, la baliza indicată.', snd:'2 sunete'},
+  {label:'C', svg:D.C(), meaning:'Poziția următoarei balize a fost schimbată (adesea cu panou verde = spre tribord sau roșu = spre babord).', snd:'Sunete repetate'},
+  {label:'N', svg:D.N(), meaning:'Toate cursele care au început sunt anulate. Reveniți în zona de start.', snd:'3 sunete'},
+  {label:'N peste H', svg:stack(D.N(),D.H()), meaning:'Cursele sunt anulate. Alte semnale vor fi date la țărm.'},
+  {label:'N peste A', svg:stack(D.N(),D.A()), meaning:'Cursele sunt anulate. Nicio altă cursă astăzi.'},
+  {label:'L', svg:D.L(), meaning:'Pe apă: „Veniți în raza de auzire" sau „Urmați această navă". La țărm: „A fost afișat un aviz pentru concurenți."'},
+  {label:'M', svg:D.M(), meaning:'Obiectul care poartă acest steag înlocuiește o baliză lipsă.'},
+  {label:'Y', svg:D.Y(), meaning:'Purtați echipamentul individual de flotabilitate (vesta de salvare).', snd:'1 sunet'},
+  {label:'V', svg:D.V(), meaning:'Monitorizați canalul de comunicații al comitetului de cursă pentru instrucțiuni de siguranță (regula 37).'},
+  {label:'Steagul albastru', svg:D.BLUE(), meaning:'Această navă a comitetului de cursă este poziționată la linia de sosire.'},
+  {label:'Steagul portocaliu', svg:D.ORANGE(), meaning:'Catargul care poartă acest steag este un capăt al liniei de start.'}
+];
+race.forEach(r=>items.push({cat:'race',...r}));
+
+/* ================= STATE & TABS ================= */
+let tab='learn', cat='all';
+const main=document.getElementById('main');
+const filtered=()=> cat==='all' ? items : items.filter(i=>i.cat===cat);
+
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); tab=b.dataset.tab; render();
+});
+document.querySelectorAll('.catbtn').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.catbtn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); cat=b.dataset.cat; render();
+});
+
+/* preselectare categorie din URL: steaguri-quiz.html#race etc. */
+const hashCat=location.hash.replace('#','');
+if(['race','ics','num'].includes(hashCat)){
+  cat=hashCat;
+  document.querySelectorAll('.catbtn').forEach(x=>x.classList.toggle('active',x.dataset.cat===hashCat));
+}
+
+function render(){
+  if(tab==='learn') renderLearn();
+  else if(tab==='cards') renderCards();
+  else renderQuizStart();
+}
+
+/* ---- Learn ---- */
+function renderLearn(){
+  main.innerHTML = `<div class="grid">` + filtered().map(i=>`
+    <div class="card">
+      <div class="flag">${i.svg}</div>
+      <div><h3>${i.label}</h3><p>${i.meaning}</p>${i.snd?`<p class="snd">🔊 ${i.snd}</p>`:''}</div>
+    </div>`).join('') + `</div>`;
+}
+
+/* ---- Flashcards ---- */
+let deck=[], fcIdx=0, flipped=false;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function renderCards(){
+  deck=shuffle([...filtered()]); fcIdx=0; flipped=false; drawCard();
+}
+function drawCard(){
+  const it=deck[fcIdx];
+  main.innerHTML=`<div class="fcwrap">
+    <div class="prog">${fcIdx+1} / ${deck.length}</div>
+    <div class="fc" id="fc">${flipped
+      ? `<h2>${it.label}</h2><p>${it.meaning}</p>${it.snd?`<p class="hint">🔊 ${it.snd}</p>`:''}`
+      : `<div class="flag">${it.svg}</div><p class="hint">Atinge cardul pentru răspuns</p>`}</div>
+    <div class="fcnav">
+      <button id="prev">← Înapoi</button>
+      <button id="shuf">🔀 Amestecă</button>
+      <button id="next">Înainte →</button>
+    </div></div>`;
+  document.getElementById('fc').onclick=()=>{flipped=!flipped;drawCard();};
+  document.getElementById('prev').onclick=()=>{fcIdx=(fcIdx-1+deck.length)%deck.length;flipped=false;drawCard();};
+  document.getElementById('next').onclick=()=>{fcIdx=(fcIdx+1)%deck.length;flipped=false;drawCard();};
+  document.getElementById('shuf').onclick=renderCards;
+}
+
+/* ---- Quiz ---- */
+let qz={qs:[],idx:0,score:0,wrong:[]};
+function renderQuizStart(){
+  main.innerHTML=`<div class="qwrap">
+    <p class="subtle">10 întrebări din categoria selectată. Vezi steagul → alege semnificația corectă.</p>
+    <button class="startbtn" id="start">Începe quiz-ul</button></div>`;
+  document.getElementById('start').onclick=startQuiz;
+}
+function startQuiz(){
+  const pool=filtered();
+  qz={qs:shuffle([...pool]).slice(0,Math.min(10,pool.length)),idx:0,score:0,wrong:[]};
+  drawQ();
+}
+function drawQ(){
+  if(qz.idx>=qz.qs.length) return drawResult();
+  const q=qz.qs[qz.idx];
+  const pool=filtered().filter(i=>i!==q);
+  const opts=shuffle([q,...shuffle([...pool]).slice(0,3)]);
+  main.innerHTML=`<div class="qwrap">
+    <div class="prog">Întrebarea ${qz.idx+1} / ${qz.qs.length} · Scor: ${qz.score}</div>
+    <div class="qflag"><div class="flag">${q.svg}</div></div>
+    <p class="subtle">Ce înseamnă acest semnal?</p>
+    <div class="opts">${opts.map((o,i)=>`<button data-i="${i}"><strong>${o.label}</strong> — ${o.meaning}</button>`).join('')}</div>
+  </div>`;
+  document.querySelectorAll('.opts button').forEach((b,i)=>b.onclick=()=>{
+    document.querySelectorAll('.opts button').forEach(x=>x.disabled=true);
+    if(opts[i]===q){b.classList.add('correct');qz.score++;}
+    else{b.classList.add('wrong');qz.wrong.push(q);
+      document.querySelectorAll('.opts button')[opts.indexOf(q)].classList.add('correct');}
+    setTimeout(()=>{qz.idx++;drawQ();},3400);
+  });
+}
+function drawResult(){
+  const pct=Math.round(100*qz.score/qz.qs.length);
+  main.innerHTML=`<div class="qwrap">
+    <div class="big">${pct>=80?'🏆':pct>=50?'👍':'📚'} ${qz.score} / ${qz.qs.length}</div>
+    <p class="score">${pct>=80?'Excelent — ești gata de examen!':pct>=50?'Bine, dar mai repetă puțin.':'Mai treci o dată prin secțiunea Învață.'}</p>
+    <button class="startbtn" id="again">Încă un quiz</button>
+    ${qz.wrong.length?`<p class="subtle">De repetat:</p><div class="review">${qz.wrong.map(w=>`
+      <div class="card"><div class="flag">${w.svg}</div><div><h3>${w.label}</h3><p>${w.meaning}</p></div></div>`).join('')}</div>`:''}
+  </div>`;
+  document.getElementById('again').onclick=startQuiz;
+}
+
+render();
+</script>
+</body>
+</html>
