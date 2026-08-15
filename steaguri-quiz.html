@@ -11,6 +11,15 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Invata steagurile marinaresti: semnalele de cursa RRS, alfabetul ICS si fanioanele numerice, cu flashcards si quiz interactiv.">
+<link rel="canonical" href="https://curse.stratix.ro/steaguri-quiz.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Steaguri marinaresti — quiz si flashcards">
+<meta property="og:description" content="Invata steagurile marinaresti: semnalele de cursa RRS, alfabetul ICS si fanioanele numerice, cu flashcards si quiz interactiv.">
+<meta property="og:url" content="https://curse.stratix.ro/steaguri-quiz.html">
+<meta property="og:locale" content="ro_RO">
+<meta name="twitter:card" content="summary">
+
 <title>Steaguri marinărești — Quiz & Flashcards</title>
 <style>
   :root{
@@ -66,6 +75,16 @@
   .review .card{align-items:center}
   .startbtn{background:var(--accent);border:none;color:#04121f;font-weight:700;padding:12px 28px;border-radius:12px;cursor:pointer;font-size:1rem}
   .subtle{color:var(--muted);font-size:.85rem;text-align:center}
+  /* Lightbox steag */
+  .card{cursor:pointer}
+  .overlay{position:fixed;inset:0;background:rgba(5,9,15,.85);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .ovcard{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:28px 24px;max-width:560px;width:100%;max-height:90vh;overflow:auto;text-align:center;position:relative}
+  .ovcard .ovflag svg{width:min(70vw,400px);height:auto}
+  .ovcard h2{color:var(--accent);font-size:1.3rem;margin:16px 0 8px}
+  .ovcard p{font-size:1.05rem;line-height:1.5}
+  .ovcard .snd{font-size:.9rem;color:var(--muted);margin-top:10px}
+  .ovclose{position:absolute;top:10px;right:14px;background:none;border:none;color:var(--muted);font-size:1.6rem;cursor:pointer;line-height:1}
+  .ovclose:hover{color:var(--text)}
 </style>
 </head>
 <body>
@@ -249,11 +268,35 @@ function render(){
 
 /* ---- Learn ---- */
 function renderLearn(){
-  main.innerHTML = `<div class="grid">` + filtered().map(i=>`
-    <div class="card">
+  const items=filtered();
+  main.innerHTML = `<div class="grid">` + items.map((i,ix)=>`
+    <div class="card" data-ix="${ix}" title="Click pentru marire">
       <div class="flag">${i.svg}</div>
       <div><h3>${i.label}</h3><p>${i.meaning}</p>${i.snd?`<p class="snd">🔊 ${i.snd}</p>`:''}</div>
     </div>`).join('') + `</div>`;
+  main.querySelectorAll('.card[data-ix]').forEach(c=>{
+    c.onclick=()=>showFlagOverlay(items[+c.dataset.ix]);
+  });
+}
+
+/* ---- Lightbox steag marit ---- */
+function showFlagOverlay(i){
+  const ov=document.createElement('div');
+  ov.className='overlay';
+  ov.innerHTML=`
+    <div class="ovcard">
+      <button class="ovclose" aria-label="Inchide">&times;</button>
+      <div class="ovflag">${i.svg}</div>
+      <h2>${i.label}</h2>
+      <p>${i.meaning}</p>
+      ${i.snd?`<p class="snd">🔊 ${i.snd}</p>`:''}
+    </div>`;
+  const close=()=>{ov.remove();document.removeEventListener('keydown',esc);};
+  const esc=e=>{if(e.key==='Escape')close();};
+  ov.onclick=e=>{if(e.target===ov)close();};
+  ov.querySelector('.ovclose').onclick=close;
+  document.addEventListener('keydown',esc);
+  document.body.appendChild(ov);
 }
 
 /* ---- Flashcards ---- */
